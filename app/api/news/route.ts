@@ -4,11 +4,20 @@ import corsHeaders from '../../utils/cors/corsHeaders'
 
 export async function GET(request: Request) {
   try {
-    const { data, error } = await supabase
+    const { searchParams } = new URL(request.url)
+    const limitParam = searchParams.get('limit')
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined
+
+    let query = supabase
       .from('news')
       .select('*')
-      .limit(4)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
     if (error) {
       return new Response(
         JSON.stringify({ error: 'Error when fetching news', details: error.message }),
